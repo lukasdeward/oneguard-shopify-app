@@ -2,18 +2,17 @@ import { ActionFunction } from "@remix-run/node";
 import { authenticate } from "app/shopify.server";
 import { OrderVerifyedRequest } from "types/orderVerifyedRequest";
 import { ProxyTypes } from "types/proxyTypes";
-import { PrismaClient } from "@prisma/client";
+import db from "../db.server";
 
 export const action: ActionFunction = async ({ request }) => {
 
     const { session, admin } = await authenticate.public.appProxy(request);
-    const prisma = new PrismaClient();
 
     if (session) {
         const parsedRequest = await request.json();
         const type = parsedRequest.type as ProxyTypes;
 
-        const access_object = await prisma.proxyAuthorizationKey.findFirst({
+        const access_object = await db.proxyAuthorizationKey.findFirst({
             where: {
                 shop: session.shop,
             }
@@ -30,7 +29,14 @@ export const action: ActionFunction = async ({ request }) => {
         if (type === "ORDER-VERIFYED") {
             const { data } = parsedRequest as OrderVerifyedRequest;
             console.log("Order ID: ", data.orderId);
+            // Todo: Change order state to verified / fullfillment ready
         }
+
+        if (type === "ORDER-CANCELLED") {
+            const { data } = parsedRequest as OrderVerifyedRequest;
+            console.log("Order ID: ", data.orderId);
+        }
+
 
         return { success: false, data: { message: "Bad Request" } };
     }

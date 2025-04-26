@@ -2,8 +2,8 @@
 
 client_id = "0dfe5ab3c1c5b92f714820e73fce11c8"
 name = "OneGuard"
-handle = "oneguard"
-application_url = "https://likewise-bet-pregnancy-appearance.trycloudflare.com"
+handle = "oneguard-app"
+application_url = "https://endorsement-hourly-glass-over.trycloudflare.com"
 embedded = true
 
 [build]
@@ -13,17 +13,26 @@ include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
+scopes = "read_orders,write_products"
 
 [auth]
 redirect_urls = [
-  "https://likewise-bet-pregnancy-appearance.trycloudflare.com/auth/callback",
-  "https://likewise-bet-pregnancy-appearance.trycloudflare.com/auth/shopify/callback",
-  "https://likewise-bet-pregnancy-appearance.trycloudflare.com/api/auth/callback"
+  "https://endorsement-hourly-glass-over.trycloudflare.com/auth/callback",
+  "https://endorsement-hourly-glass-over.trycloudflare.com/auth/shopify/callback",
+  "https://endorsement-hourly-glass-over.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
 api_version = "2025-04"
+
+  [[webhooks.subscriptions]]
+  topics = [ "orders/create" ]
+  uri = "/webhooks/app/order-create"
+
+[app_proxy]
+url = "https://endorsement-hourly-glass-over.trycloudflare.com/app/proxy"
+subpath = "proxy"
+prefix = "apps"
 
 [pos]
 embedded = false

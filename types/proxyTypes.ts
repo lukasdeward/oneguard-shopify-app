@@ -1,1 +1,1 @@
-export type ProxyTypes = 'ORDER-VERIFYED'
+export type ProxyTypes = 'ORDER-VERIFYED' | 'ORDER-CANCELLED'
