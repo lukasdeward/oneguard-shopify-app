@@ -15,9 +15,58 @@ import {
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
+import { PrismaClient } from "@prisma/client";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
+  const { admin, session } = await authenticate.admin(request);
+
+  const prisma = new PrismaClient();
+
+  session.shop
+  const shop = await admin.graphql(
+    `#graphql
+      query {
+        shop {
+          id
+          primaryDomain {
+            url
+          }
+          myshopifyDomain
+        }
+      }`);
+    
+  const shopJson = await shop.json();
+  
+  const accessKey = crypto.randomUUID()
+
+  const registerShop = await fetch("http://localhost:3000/api/webhooks/registerShop", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      shop: shopJson.data?.shop.myshopifyDomain,
+      key: accessKey,
+      shopId: shopJson.data?.shop.id,
+      primaryDomain: shopJson.data?.shop.primaryDomain.url
+    }),
+  })
+
+  const registerShopResponse = await registerShop.json();
+
+  if (registerShopResponse.connectionCreated) {
+    await prisma.proxyAuthorizationKey.create({
+      data: {
+        key: accessKey,
+        shop: shopJson.data?.shop.myshopifyDomain
+      }
+    })
+  }
+
+  // Todo: Generate a new access key. Request the 3.rd party service to register the shop. 
+  // If the shop is already registered do nothing. If not save the access key to the database.
+  
+
 
   return null;
 };

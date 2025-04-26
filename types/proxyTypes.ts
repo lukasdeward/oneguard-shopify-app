@@ -1,0 +1,1 @@
+export type ProxyTypes = 'ORDER-VERIFYED'
