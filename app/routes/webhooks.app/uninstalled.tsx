@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { authenticate } from "../shopify.server";
-import db from "../db.server";
+import { authenticate } from "../../shopify.server";
+import db from "../../db.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { shop, session, topic } = await authenticate.webhook(request);
@@ -11,6 +11,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   // If this webhook already ran, the session may have been deleted previously.
   if (session) {
     await db.session.deleteMany({ where: { shop } });
+    await db.proxyAuthorizationKey.deleteMany({ where: { shop } });
+    await db.restrictedCollection.deleteMany({ where: { shop } });
   }
 
   return new Response();

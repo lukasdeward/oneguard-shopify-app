@@ -2,6 +2,7 @@ import "@shopify/shopify-app-remix/adapters/node";
 import {
   ApiVersion,
   AppDistribution,
+  DeliveryMethod,
   shopifyApp,
 } from "@shopify/shopify-app-remix/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
@@ -23,6 +24,25 @@ const shopify = shopifyApp({
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
     : {}),
+    webhooks: {
+      ORDERS_CREATE: {
+        deliveryMethod: DeliveryMethod.Http,
+        callbackUrl: '/webhooks/app/order-create',
+      },
+      APP_UNINSTALLED: {
+        deliveryMethod: DeliveryMethod.Http,
+        callbackUrl: '/webhooks/app/uninstalled',
+      },
+      APP_SCOPES_UPDATE: {
+        deliveryMethod: DeliveryMethod.Http,
+        callbackUrl: '/webhooks/app/scopes-update',
+      },
+    },
+    hooks: {
+      afterAuth: async ({session}) => {
+        shopify.registerWebhooks({session});
+      },
+    },
 });
 
 export default shopify;

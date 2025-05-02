@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import {
@@ -9,9 +9,10 @@ import {
   Button,
   BlockStack,
   Box,
-  List,
-  Link,
-  InlineStack,
+  useBreakpoints,
+  TextField,
+  InlineGrid,
+  Divider,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -72,172 +73,85 @@ export default function Index() {
   const fetcher = useFetcher<typeof action>();
 
   const shopify = useAppBridge();
-  const isLoading =
-    ["loading", "submitting"].includes(fetcher.state) &&
-    fetcher.formMethod === "POST";
 
+
+  async function generateBlogPost() {
+    // Handle generating
+    const selected = await shopify.resourcePicker({type: 'collection'});
+    fetcher.submit(
+      { selected: JSON.stringify(selected) },
+      {
+        method: "post",
+        action: "/app/generateBlogPost",
+      }
+    );
+
+    return null;
+  };
+
+  // This example is for guidance purposes. Copying it will come with caveats.
+  const { smUp } = useBreakpoints();
   return (
-    <Page>
-      <TitleBar title="OneGuard - ID Check">
-      </TitleBar>
-      <BlockStack gap="500">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <BlockStack gap="500">
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Congrats on creating a new Shopify app 🎉
-                  </Text>
-                  <Text variant="bodyMd" as="p">
-                    This embedded app template uses{" "}
-                    <Link
-                      url="https://shopify.dev/docs/apps/tools/app-bridge"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      App Bridge
-                    </Link>{" "}
-                    interface examples like an{" "}
-                    <Link url="/app/additional" removeUnderline>
-                      additional page in the app nav
-                    </Link>
-                    , as well as an{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      Admin GraphQL
-                    </Link>{" "}
-                    mutation demo, to provide a starting point for app
-                    development.
-                  </Text>
-                </BlockStack>
-                <BlockStack gap="200">
-                  <Text as="h3" variant="headingMd">
-                    Get started with products
-                  </Text>
-                  <Text as="p" variant="bodyMd">
-                    Generate a product with GraphQL and get the JSON output for
-                    that product. Learn more about the{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql/latest/mutations/productCreate"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      productCreate
-                    </Link>{" "}
-                    mutation in our API references.
-                  </Text>
-                </BlockStack>
+    <Page
+      primaryAction={{ content: "View on your store", disabled: true }}
+      secondaryActions={[
+        {
+          content: "Duplicate",
+          accessibilityLabel: "Secondary action label",
+          onAction: () => alert("Duplicate action"),
+        },
+      ]}
+    >
+      <BlockStack gap={{ xs: "800", sm: "400" }}>
+      <Text variant="heading3xl" as="h2">
+        Einstellungen
+      </Text>
 
-              </BlockStack>
-            </Card>
-          </Layout.Section>
-          <Layout.Section variant="oneThird">
-            <BlockStack gap="500">
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    App template specs
-                  </Text>
-                  <BlockStack gap="200">
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Framework
-                      </Text>
-                      <Link
-                        url="https://remix.run"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Remix
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Database
-                      </Text>
-                      <Link
-                        url="https://www.prisma.io/"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Prisma
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Interface
-                      </Text>
-                      <span>
-                        <Link
-                          url="https://polaris.shopify.com"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          Polaris
-                        </Link>
-                        {", "}
-                        <Link
-                          url="https://shopify.dev/docs/apps/tools/app-bridge"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          App Bridge
-                        </Link>
-                      </span>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        API
-                      </Text>
-                      <Link
-                        url="https://shopify.dev/docs/api/admin-graphql"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphQL API
-                      </Link>
-                    </InlineStack>
-                  </BlockStack>
-                </BlockStack>
-              </Card>
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Next steps
-                  </Text>
-                  <List>
-                    <List.Item>
-                      Build an{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/getting-started/build-app-example"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        {" "}
-                        example app
-                      </Link>{" "}
-                      to get started
-                    </List.Item>
-                    <List.Item>
-                      Explore Shopify’s API with{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/tools/graphiql-admin-api"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphiQL
-                      </Link>
-                    </List.Item>
-                  </List>
-                </BlockStack>
-              </Card>
+        <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
+          <Box
+            as="section"
+            paddingInlineStart={{ xs: 400, sm: 0 }}
+            paddingInlineEnd={{ xs: 400, sm: 0 }}
+          >
+            <BlockStack gap="400">
+              <Text as="h3" variant="headingMd">
+                InterJambs
+              </Text>
+              <Text as="p" variant="bodyMd">
+                Interjambs are the rounded protruding bits of your puzzlie piece
+              </Text>
             </BlockStack>
-          </Layout.Section>
-        </Layout>
+          </Box>
+          <Card roundedAbove="sm">
+            <BlockStack gap="400">
+              <Button onClick={generateBlogPost}>Add product</Button>
+              <TextField label="Interjamb ratio" />
+            </BlockStack>
+          </Card>
+        </InlineGrid>
+        {smUp ? <Divider /> : null}
+        <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
+          <Box
+            as="section"
+            paddingInlineStart={{ xs: 400, sm: 0 }}
+            paddingInlineEnd={{ xs: 400, sm: 0 }}
+          >
+            <BlockStack gap="400">
+              <Text as="h3" variant="headingMd">
+                Dimensions
+              </Text>
+              <Text as="p" variant="bodyMd">
+                Interjambs are the rounded protruding bits of your puzzlie piece
+              </Text>
+            </BlockStack>
+          </Box>
+          <Card roundedAbove="sm">
+            <BlockStack gap="400">
+              <TextField label="Horizontal" />
+              <TextField label="Interjamb ratio" />
+            </BlockStack>
+          </Card>
+        </InlineGrid>
       </BlockStack>
     </Page>
   );

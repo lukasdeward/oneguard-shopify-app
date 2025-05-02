@@ -38,3 +38,11 @@ model ProxyAuthorizationKey {
   key       String   @unique
   shop      String
 }
+
+model restrictedCollection {
+  id        String   @id  @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  collectionId String
+  shop      String
+}
