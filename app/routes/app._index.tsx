@@ -13,6 +13,7 @@ import {
   TextField,
   InlineGrid,
   Divider,
+  Badge,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -53,12 +54,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const registerShopResponse = await registerShop.json();
 
   if (registerShopResponse.connectionCreated) {
-    await db.proxyAuthorizationKey.create({
-      data: {
-        key: accessKey,
-        shop: shopJson.data?.shop.myshopifyDomain
+    const access_object = await db.proxyAuthorizationKey.findFirst({
+      where: {
+        shop: shopJson.data?.shop.myshopifyDomain,
       }
-    });
+    })
+    if (!access_object) {
+      await db.proxyAuthorizationKey.create({
+        data: {
+          key: accessKey,
+          shop: shopJson.data?.shop.myshopifyDomain
+        }
+      });
+    }
   }
 
   return null;
@@ -93,18 +101,10 @@ export default function Index() {
   const { smUp } = useBreakpoints();
   return (
     <Page
-      primaryAction={{ content: "View on your store", disabled: true }}
-      secondaryActions={[
-        {
-          content: "Duplicate",
-          accessibilityLabel: "Secondary action label",
-          onAction: () => alert("Duplicate action"),
-        },
-      ]}
     >
       <BlockStack gap={{ xs: "800", sm: "400" }}>
       <Text variant="heading3xl" as="h2">
-        Einstellungen
+        OneGuard - Ausweiskontrolle
       </Text>
 
         <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
@@ -115,17 +115,30 @@ export default function Index() {
           >
             <BlockStack gap="400">
               <Text as="h3" variant="headingMd">
-                InterJambs
-              </Text>
-              <Text as="p" variant="bodyMd">
-                Interjambs are the rounded protruding bits of your puzzlie piece
+                Einstellungen       
               </Text>
             </BlockStack>
           </Box>
           <Card roundedAbove="sm">
             <BlockStack gap="400">
-              <Button onClick={generateBlogPost}>Add product</Button>
-              <TextField label="Interjamb ratio" />
+              <div style={{ display: "flex", gap: "1rem", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                  <Text as="h3" variant="headingMd">
+                    Status:
+                  </Text>
+                  <Badge progress="incomplete" tone="attention">
+                    Inaktiv
+                  </Badge>
+                </div>
+                <Button variant="primary">Aktivieren</Button>
+
+              </div>
+              <div style={{ display: "flex", gap: "1rem", justifyContent: "space-between", alignItems: "center" }}>
+                <Text as="h3" variant="headingMd">
+                  Altersbeschränkte Produkte:
+                </Text>
+                <Button onClick={generateBlogPost}>Kollektion auswählen</Button>
+              </div>
             </BlockStack>
           </Card>
         </InlineGrid>
