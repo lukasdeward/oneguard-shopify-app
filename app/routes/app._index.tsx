@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import {
@@ -14,10 +14,13 @@ import {
   InlineGrid,
   Divider,
   Badge,
+  Select,
+  Checkbox,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
+import prisma from "../db.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
@@ -27,6 +30,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       query {
         shop {
           id
+          name
           primaryDomain {
             url
           }
@@ -54,16 +58,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const registerShopResponse = await registerShop.json();
 
   if (registerShopResponse.connectionCreated) {
-    const access_object = await db.proxyAuthorizationKey.findFirst({
+    const access_object = await db.appConfiguration.findFirst({
       where: {
         shop: shopJson.data?.shop.myshopifyDomain,
       }
     })
     if (!access_object) {
-      await db.proxyAuthorizationKey.create({
+      await db.appConfiguration.create({
         data: {
-          key: accessKey,
-          shop: shopJson.data?.shop.myshopifyDomain
+          proxyAccessKey: accessKey,
+          shop: shopJson.data?.shop.myshopifyDomain,
+          displayName: shopJson.data?.shop.name,
+          verificationAdressMatchesOrder: false,
+          verificationAge: "16"
         }
       });
     }
@@ -74,25 +81,61 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
+
+  const shop = await admin.graphql(
+    `#graphql
+      query {
+        shop {
+          myshopifyDomain
+        }
+      }`);
+    
+  const shopJson = await shop.json();
+
+  
+  prisma.appConfiguration.update({
+    where: {
+      shop: shopJson.data?.shop.myshopifyDomain,
+    },
+    data: {
+      restrictedProductsCollection: selected?.toString(),
+    }
+  })
+
   return true;
 };
 
 export default function Index() {
-  const fetcher = useFetcher<typeof action>();
-
   const shopify = useAppBridge();
 
+  const [selected, setSelected] = useState('newestUpdate');
 
-  async function generateBlogPost() {
+  const handleSelectChange = useCallback(
+    (value: string) => setSelected(value),
+    [],
+  );
+
+  const options = [
+    {label: '16', value: '16'},
+    {label: '17', value: '17'},
+    {label: '18', value: '18'},
+    {label: '19', value: '19'},
+    {label: '20', value: '20'},
+    {label: '21', value: '21'},
+  ];
+
+  const [checked, setChecked] = useState(false);
+  const handleChange = useCallback(
+    (newChecked: boolean) => setChecked(newChecked),
+    [],
+  );
+
+  async function selectCollection() {
     // Handle generating
     const selected = await shopify.resourcePicker({type: 'collection'});
-    fetcher.submit(
-      { selected: JSON.stringify(selected) },
-      {
-        method: "post",
-        action: "/app/generateBlogPost",
-      }
-    );
+
+    // Send request to action and save selected collection
+    
 
     return null;
   };
@@ -110,12 +153,12 @@ export default function Index() {
         <InlineGrid columns={{ xs: "1fr", md: "2fr 5fr" }} gap="400">
           <Box
             as="section"
-            paddingInlineStart={{ xs: 400, sm: 0 }}
-            paddingInlineEnd={{ xs: 400, sm: 0 }}
+            paddingInlineStart={{ xs: "400", sm: "0" }}
+            paddingInlineEnd={{ xs: "400", sm: "0" }}
           >
             <BlockStack gap="400">
               <Text as="h3" variant="headingMd">
-                Einstellungen       
+                Einstellungen    
               </Text>
             </BlockStack>
           </Box>
@@ -131,14 +174,14 @@ export default function Index() {
                   </Badge>
                 </div>
                 <Button variant="primary">Aktivieren</Button>
-
               </div>
               <div style={{ display: "flex", gap: "1rem", justifyContent: "space-between", alignItems: "center" }}>
                 <Text as="h3" variant="headingMd">
                   Altersbeschränkte Produkte:
                 </Text>
-                <Button onClick={generateBlogPost}>Kollektion auswählen</Button>
+                <Button onClick={selectCollection}>Kollektion auswählen</Button>
               </div>
+              <TextField label="Anzeigename des Shops" />
             </BlockStack>
           </Card>
         </InlineGrid>
@@ -151,17 +194,35 @@ export default function Index() {
           >
             <BlockStack gap="400">
               <Text as="h3" variant="headingMd">
-                Dimensions
-              </Text>
-              <Text as="p" variant="bodyMd">
-                Interjambs are the rounded protruding bits of your puzzlie piece
+                Ausweis Konfiguration
               </Text>
             </BlockStack>
           </Box>
           <Card roundedAbove="sm">
             <BlockStack gap="400">
-              <TextField label="Horizontal" />
-              <TextField label="Interjamb ratio" />
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "space-between", alignItems: "center" }}>
+                <Text as="h3" variant="headingMd">
+                  Adresse:
+                </Text>
+                <Checkbox
+                  label="Lieferadresse des Kunden muss mit Ausweisadresse übereinstimmen"
+                  checked={checked}
+                  onChange={handleChange}
+                />
+              </div>
+              <div style={{ display: "flex", gap: "1rem", justifyContent: "space-between", alignItems: "center" }}>
+                <Text as="h3" variant="headingMd">
+                  Notwendiges Alter:
+                </Text>
+                <Select
+                  label="Alter auf dem Ausweis"
+                  labelInline
+                  options={options}
+                  onChange={handleSelectChange}
+                  value={selected}
+                />
+              </div>
+
             </BlockStack>
           </Card>
         </InlineGrid>

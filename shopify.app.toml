@@ -3,7 +3,7 @@
 client_id = "0dfe5ab3c1c5b92f714820e73fce11c8"
 name = "OneGuard"
 handle = "oneguard-app"
-application_url = "https://expert-walker-license-releases.trycloudflare.com"
+application_url = "https://triangle-introduction-governmental-sleeping.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_orders,write_products"
 
 [auth]
 redirect_urls = [
-  "https://expert-walker-license-releases.trycloudflare.com/auth/callback",
-  "https://expert-walker-license-releases.trycloudflare.com/auth/shopify/callback",
-  "https://expert-walker-license-releases.trycloudflare.com/api/auth/callback"
+  "https://triangle-introduction-governmental-sleeping.trycloudflare.com/auth/callback",
+  "https://triangle-introduction-governmental-sleeping.trycloudflare.com/auth/shopify/callback",
+  "https://triangle-introduction-governmental-sleeping.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]
@@ -38,7 +38,7 @@ api_version = "2025-04"
   uri = "/webhooks/app/uninstalled"
 
 [app_proxy]
-url = "https://expert-walker-license-releases.trycloudflare.com/app/proxy"
+url = "https://triangle-introduction-governmental-sleeping.trycloudflare.com/app/proxy"
 subpath = "proxy"
 prefix = "apps"
 
